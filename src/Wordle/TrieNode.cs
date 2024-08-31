@@ -1,4 +1,3 @@
-using System;
 namespace Wordle;
 
 public class TrieNode
@@ -13,5 +12,7 @@ public class TrieNode
 
     public string? Word { get; set; }
 
-    public override string ToString() => IsWord ? $"{Value} ({Word})" : Value.ToString(); 
+    public long? Frequency { get; set; }
+
+    public override string ToString() => IsWord ? $"{Value} ({Word} {Frequency?.ToString() ?? ""})" : Value.ToString(); 
 }

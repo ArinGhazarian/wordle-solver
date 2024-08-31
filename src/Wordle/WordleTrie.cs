@@ -65,9 +65,13 @@ public class WordleTrie
 
         using var file = File.OpenText(dictionaryFilePath);
 
-        var word = await file.ReadLineAsync();
-        while (word is not null)
+        var line = await file.ReadLineAsync();
+        while (!string.IsNullOrEmpty(line))
         {
+            var segments =  line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var word = segments[0];
+            var frequency = segments.Length > 1 ? long.Parse(segments[1]) : (long?)null;
+            
             var currentNode = trie.Root;
             trie.TotalWords++;
 
@@ -88,7 +92,8 @@ public class WordleTrie
 
             currentNode.IsWord = true;
             currentNode.Word = word;
-            word = await file.ReadLineAsync();
+            currentNode.Frequency = frequency;
+            line = await file.ReadLineAsync();
         }
 
         return trie;
