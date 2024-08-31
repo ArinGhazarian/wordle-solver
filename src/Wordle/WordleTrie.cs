@@ -9,11 +9,11 @@ public class WordleTrie
     public int TotalWords { get; private set; }
 
     /// <summary>
-    /// Suggests all possible words based on the guessed word.
+    /// Suggests top 10 possible words based on the guessed word.
     /// </summary>
     /// <param name="guessed">The guessed word</param>
     /// <param name="letterStatuses">The status of each letter in the guessed word</param>
-    /// <returns>All possible words.</returns>
+    /// <returns>Top 10 possible words ordred descendingly by their freqencies.</returns>
     public List<string> SuggestWords(string guessed, Status?[] letterStatuses)
     {
         foreach (var ch in guessed.Where((_, i) => letterStatuses[i] == Status.Gray))
@@ -21,19 +21,17 @@ public class WordleTrie
             _skippedLetters.Add(ch);
         }
 
-        var paths = new List<string>();
-        FindAllPaths(Root, guessed, letterStatuses, -1, "", paths);
+        var paths = new List<(string Word, long? Frequency)>();
+        FindAllPaths(Root, guessed, letterStatuses, -1, paths);
 
-        return paths;
+        return paths.OrderByDescending(x => x.Frequency).Select(x => x.Word).Take(10).ToList();
     }
 
-    private void FindAllPaths(TrieNode node, string guessed, Status?[] letterStatuses, int index, string path, List<string> paths)
+    private void FindAllPaths(TrieNode node, string guessed, Status?[] letterStatuses, int index, List<(string Word, long? Frequency)> paths)
     {
-        path += node != Root ? node.Value : "";
-
         if (node.Children.Count == 0)
         {
-            paths.Add(path);
+            paths.Add((node.Word!, node.Frequency));
             return;
         }
 
@@ -50,7 +48,7 @@ public class WordleTrie
 
         foreach (var child in children)
         {
-            FindAllPaths(child, guessed, letterStatuses, index + 1, path, paths);
+            FindAllPaths(child, guessed, letterStatuses, index + 1, paths);
         }
     }
 
@@ -68,7 +66,7 @@ public class WordleTrie
         var line = await file.ReadLineAsync();
         while (!string.IsNullOrEmpty(line))
         {
-            var segments =  line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var segments = line.Split(" ", StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var word = segments[0];
             var frequency = segments.Length > 1 ? long.Parse(segments[1]) : (long?)null;
             
