@@ -46,6 +46,16 @@ public class WordleTrie
                     .Select(x => x.Word);
     }
 
+    /// <summary>
+    /// Cleans up guessed words history
+    /// </summary>
+    public void ResetHistory()
+    {
+        _history.Clear();
+        _excludedLetters.Clear();
+        _includedLetters.Clear();
+    }
+
     private void FindAllPaths(TrieNode node, string guessed, int index, List<(string Word, long? Frequency)> paths)
     {
         if (node.Children.Count == 0)
