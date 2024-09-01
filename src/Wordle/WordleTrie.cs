@@ -15,8 +15,8 @@ public class WordleTrie
     /// </summary>
     /// <param name="guessed">The guessed word</param>
     /// <param name="letterStatuses">The status of each letter in the guessed word</param>
-    /// <returns>Top all possible words ordred descendingly by their freqencies.</returns>
-    public List<string> SuggestWords(string guessed, Status?[] letterStatuses)
+    /// <returns>All possible words ordred descendingly by their freqencies.</returns>
+    public IEnumerable<string> SuggestWords(string guessed, Status?[] letterStatuses)
     {
         for (var i = 0; i < guessed.Length; i++)
         {
@@ -43,8 +43,7 @@ public class WordleTrie
 
         return paths.Where(x => _includedLetters.Count <= 0 || !_includedLetters.Except(x.Word).Any())
                     .OrderByDescending(x => x.Frequency)
-                    .Select(x => x.Word)
-                    .ToList();
+                    .Select(x => x.Word);
     }
 
     private void FindAllPaths(TrieNode node, string guessed, int index, List<(string Word, long? Frequency)> paths)
