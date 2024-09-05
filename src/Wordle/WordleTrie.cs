@@ -2,61 +2,65 @@ namespace Wordle;
 
 public class WordleTrie
 {
-    private readonly HashSet<char> _excludedLetters = [];
-    private readonly HashSet<char> _includedLetters = [];
-    private readonly Dictionary<int, List<(char Letter, Status Status)>> _history = [];
-
     public TrieNode Root { get; } = new() { Value = '/' };
 
     public int TotalWords { get; private set; }
 
     /// <summary>
-    /// Suggests all possible words based on the guessed word.
+    /// Suggests all possible words based on the provided word history.
     /// </summary>
-    /// <param name="guessed">The guessed word</param>
-    /// <param name="letterStatuses">The status of each letter in the guessed word</param>
+    /// <param name="wordHistory">The guessed word.</param>
     /// <returns>All possible words ordred descendingly by their freqencies.</returns>
-    public IEnumerable<string> SuggestWords(string guessed, Status?[] letterStatuses)
+    public IEnumerable<string> SuggestWords(params (string GuessedWord, Status[] Feedback)[] wordHistory)
     {
-        for (var i = 0; i < guessed.Length; i++)
+        var excludedLetters = new HashSet<char>();
+        var includedLetters = new HashSet<char>();
+        var letterHistory = new Dictionary<int, List<(char Letter, Status Status)>>();
+
+        foreach (var (guessed, feedback) in wordHistory)
         {
-            var ch = guessed[i];
+            for (var i = 0; i < guessed.Length; i++)
+            {
+                var ch = guessed[i];
 
-            if (!_history.ContainsKey(i))
-            {
-                _history[i] = [];
-            }
-            _history[i].Add((ch, (Status)letterStatuses[i]!));
+                if (!letterHistory.TryAdd(i, [(ch, feedback[i])]))
+                {
+                    letterHistory[i].Add((ch, feedback[i]));
+                }
 
-            if (letterStatuses[i] == Status.Gray)
-            {
-                _excludedLetters.Add(ch);
-            }
-            else if (letterStatuses[i] is Status.Yellow or Status.Green)
-            {
-                _includedLetters.Add(ch);
+                if (feedback[i] == Status.Gray)
+                {
+                    excludedLetters.Add(ch);
+                }
+                else // Status.Yellow or Status.Green
+                {
+                    includedLetters.Add(ch);
+                }
             }
         }
 
         var paths = new List<(string Word, long? Frequency)>();
-        FindAllPaths(Root, guessed, -1, paths);
+        FindAllPaths(Root, -1, excludedLetters, letterHistory, paths);
 
-        return paths.Where(x => _includedLetters.Count <= 0 || !_includedLetters.Except(x.Word).Any())
+        return paths.Where(x => includedLetters.Count <= 0 || !includedLetters.Except(x.Word).Any())
                     .OrderByDescending(x => x.Frequency)
                     .Select(x => x.Word);
     }
 
     /// <summary>
-    /// Cleans up guessed words history
+    /// Finds all possibe paths starting from the root of the Trie.
     /// </summary>
-    public void ResetHistory()
-    {
-        _history.Clear();
-        _excludedLetters.Clear();
-        _includedLetters.Clear();
-    }
-
-    private void FindAllPaths(TrieNode node, string guessed, int index, List<(string Word, long? Frequency)> paths)
+    /// <param name="node">Current node being processed.</param>
+    /// <param name="index">The level of the current node that corresponds to the letter index with the Root node being -1.</param>
+    /// <param name="excludedLetters">All excluded letters.</param>
+    /// <param name="letterHistory">Letter history by index.</param>
+    /// <param name="paths">All possible path outputs.</param>
+    private void FindAllPaths(
+        TrieNode node,
+        int index,
+        HashSet<char> excludedLetters,
+        Dictionary<int, List<(char Letter, Status Status)>> letterHistory,
+        List<(string Word, long? Frequency)> paths)
     {
         if (node.Children.Count == 0)
         {
@@ -64,9 +68,9 @@ public class WordleTrie
             return;
         }
 
-        var children = node.Children.Where(n => !_excludedLetters.Contains(n.Value));
-        
-        if (_history.TryGetValue(index + 1, out var nextLetterHistory))
+        var children = node.Children.Where(n => !excludedLetters.Contains(n.Value));
+
+        if (letterHistory.TryGetValue(index + 1, out var nextLetterHistory))
         {
             if (nextLetterHistory.Any(x => x.Status == Status.Green))
             {
@@ -82,7 +86,7 @@ public class WordleTrie
 
         foreach (var child in children)
         {
-            FindAllPaths(child, guessed, index + 1, paths);
+            FindAllPaths(child, index + 1, excludedLetters, letterHistory, paths);
         }
     }
 
