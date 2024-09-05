@@ -11,7 +11,7 @@ public class WordleTrie
     /// </summary>
     /// <param name="wordHistory">The history of all guessed words and their respective Wordle feedbacks.</param>
     /// <returns>All possible words ordred descendingly by their freqencies.</returns>
-    public IEnumerable<string> SuggestWords(IEnumerable<(string GuessedWord, Status[] Feedback)>? wordHistory)
+    public IEnumerable<string> SuggestWords(IEnumerable<(string GuessedWord, Status[] Feedback)>? wordHistory = null)
     {
         var excludedLetters = new HashSet<char>();
         var includedLetters = new HashSet<char>();
