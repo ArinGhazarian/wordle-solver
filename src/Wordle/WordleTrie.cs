@@ -9,15 +9,15 @@ public class WordleTrie
     /// <summary>
     /// Suggests all possible words based on the provided word history.
     /// </summary>
-    /// <param name="wordHistory">The guessed word.</param>
+    /// <param name="wordHistory">The history of all guessed words and their respective Wordle feedbacks.</param>
     /// <returns>All possible words ordred descendingly by their freqencies.</returns>
-    public IEnumerable<string> SuggestWords(params (string GuessedWord, Status[] Feedback)[] wordHistory)
+    public IEnumerable<string> SuggestWords(IEnumerable<(string GuessedWord, Status[] Feedback)>? wordHistory)
     {
         var excludedLetters = new HashSet<char>();
         var includedLetters = new HashSet<char>();
         var letterHistory = new Dictionary<int, List<(char Letter, Status Status)>>();
 
-        foreach (var (guessed, feedback) in wordHistory)
+        foreach (var (guessed, feedback) in wordHistory ?? [])
         {
             for (var i = 0; i < guessed.Length; i++)
             {
