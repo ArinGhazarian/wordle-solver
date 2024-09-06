@@ -40,11 +40,9 @@ public class WordleTrie
         }
 
         var paths = new List<(string Word, long? Frequency)>();
-        FindAllPaths(Root, -1, excludedLetters, letterHistory, paths);
+        FindAllPaths(Root, -1, includedLetters, excludedLetters, letterHistory, paths);
 
-        return paths.Where(x => includedLetters.Count <= 0 || !includedLetters.Except(x.Word).Any())
-                    .OrderByDescending(x => x.Frequency)
-                    .Select(x => x.Word);
+        return paths.OrderByDescending(x => x.Frequency).Select(x => x.Word);
     }
 
     /// <summary>
@@ -52,23 +50,29 @@ public class WordleTrie
     /// </summary>
     /// <param name="node">Current node being processed.</param>
     /// <param name="index">The level of the current node that corresponds to the letter index with the Root node being -1.</param>
+    /// <param name="includedLetters">All included letters.</param>
     /// <param name="excludedLetters">All excluded letters.</param>
     /// <param name="letterHistory">Letter history by index.</param>
     /// <param name="paths">All possible path outputs.</param>
     private void FindAllPaths(
         TrieNode node,
         int index,
+        HashSet<char> includedLetters,
         HashSet<char> excludedLetters,
         Dictionary<int, List<(char Letter, Status Status)>> letterHistory,
         List<(string Word, long? Frequency)> paths)
     {
         if (node.Children.Count == 0)
         {
-            paths.Add((node.Word!, node.Frequency));
+            if (!includedLetters.Except(node.Word!).Any())
+            {
+                paths.Add((node.Word!, node.Frequency));
+            }
+
             return;
         }
 
-        var children = node.Children.Where(n => !excludedLetters.Contains(n.Value));
+        var children = node.Children.AsEnumerable();
 
         if (letterHistory.TryGetValue(index + 1, out var nextLetterHistory))
         {
@@ -77,16 +81,16 @@ public class WordleTrie
                 var letter = nextLetterHistory.First(x => x.Status == Status.Green).Letter;
                 children = children.Where(n => n.Value == letter);
             }
-            else if (nextLetterHistory.Any(x => x.Status == Status.Yellow))
+            else
             {
-                var letters = nextLetterHistory.Where(x => x.Status == Status.Yellow).Select(x => x.Letter).ToList();
-                children = children.Where(n => !letters.Contains(n.Value));
+                var letters = nextLetterHistory.Where(x => x.Status != Status.Green).Select(x => x.Letter).ToList();
+                children = children.Where(n => !letters.Contains(n.Value) && !excludedLetters.Contains(n.Value));
             }
         }
 
         foreach (var child in children)
         {
-            FindAllPaths(child, index + 1, excludedLetters, letterHistory, paths);
+            FindAllPaths(child, index + 1, includedLetters, excludedLetters, letterHistory, paths);
         }
     }
 

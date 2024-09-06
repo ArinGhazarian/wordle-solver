@@ -7,9 +7,12 @@ var yellow = Status.Yellow;
 
 var trie = await WordleTrie.FromDictionary("./resources/words_alpha_five_letter_freq.txt");
 
-var word = trie.SuggestWords().Take(100).PickOne();
-var words = trie.SuggestWords(
-    ("music", [yellow, gray, gray, gray, yellow]),
-    ("cream", [green, gray, yellow, yellow, yellow])).ToList();
+var words = trie.SuggestWords().ToList();
+words = trie.SuggestWords(
+    [
+        ("great", [gray, yellow, green, gray, yellow]),
+        ("there", [yellow, gray, green, green, gray]),
+        ("utero", [gray, green, green, green, gray]),
+    ]).ToList();
 
 Console.ReadLine();
