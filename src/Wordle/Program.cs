@@ -7,40 +7,62 @@ var trie = await WordleTrie.FromDictionary("./resources/words_alpha_five_letter_
 
 var guess = "";
 var history = new List<(string GuessedWord, WordleStatus[] WordleFeedback)>(5);
+var suggestedWords = trie.SuggestWords();
+var suggestedWordsCount = trie.TotalWords;
 
-var selection = AnsiConsole.Prompt(
-    new SelectionPrompt<string>()
-        .Title("How do you wanna pick your first guess?")
-        .AddChoices(
-            "1. Random pick from the top 100 words.",
-            "2. Let me enter my own."));
-var option = int.Parse(selection[0].ToString());
-if (option == 1)
+var counter = 0;
+foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th", "6th" })
 {
-    do
+    Divider($"[green]{position} guess[/]");
+
+    if (suggestedWordsCount > 0)
     {
-        guess = trie.SuggestWords().Take(100).PickOne();
-        AnsiConsole.MarkupLine($"First guess: [bold {RandomColor()}]{guess}[/]");
+        AnsiConsole.MarkupLine($"There are a total of {suggestedWordsCount} suggestion(s) for your next guess. Now you have the following options:");
+        do
+        {
+            var selection = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .AddChoices(
+                        "1. Select one of the top 10 suggestions.",
+                        "2. Select the top 1 suggestion.",
+                        "3. Random pick from top 100 suggestions.",
+                        "4. Let me enter my own."));
+
+            var option = int.Parse(selection[0].ToString());
+            guess = option switch
+            {
+                1 => AnsiConsole.Prompt(new SelectionPrompt<string>()
+                                .Title("Select one of the following suggested words:")
+                                .AddChoices(suggestedWords.Take(10))),
+                2 => suggestedWords.First(),
+                3 => suggestedWords.PickOne(),
+                _ => GetUserInput()
+            };
+
+            NewLine();
+            AnsiConsole.MarkupLine($"{new[] { "Perfect", "Awesome", "Great" }.PickOne()}! Your {position} guess is: [yellow]{guess}[/]");
+        }
+        while (!AskConfirmation("If you're happy with the word, press [green]y[/] to continue or [red]n[/] to select another option."));
     }
-    while (!AskConfirmation("Press [green]y[/] if you're feeling lucky or [red]n[/] to pick another guess."));
-}
-else if (option == 2)
-{
-    do
+    else
     {
-        AnsiConsole.MarkupLine("Please enter your 1st guess (5 letter word, letters must all be from english alphabet) followed by enter:");
-        guess = Console.ReadLine()?.ToLower();
+        AnsiConsole.MarkupLine("It looks like something went wrong because no suggestions were found. This typically indicates that the feedback data entered may be incorrect.");
+        AnsiConsole.MarkupLine("But don't worry you can still enter your own guess.");
+        guess = GetUserInput();
     }
-    while (!IsValidWord(guess));
-}
 
-
-foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th" })
-{
     NewLine();
-    AnsiConsole.MarkupLine($"Great! Now enter the {position} guess ([bold yellow]{guess}[/]) into Wordle and type in the feedback.");
 
-    if (!AskConfirmation("Once you're done, press [green]y[/] to continue or if you hit jackpot press [red]n[/] to skip to the summary."))
+    if (counter >= 5)
+    {
+        AnsiConsole.MarkupLine($"This is your last chance! enter the 6th and last guess ([bold yellow]{guess}[/] into Wordle :crossed_fingers:)");
+        AnsiConsole.Ask<string>("Press any key to show the summary.");
+        break;
+    }
+
+    AnsiConsole.MarkupLine($"Great! Now go ahead and enter your {position} guess ([bold yellow]{guess}[/]) into Wordle and once done proceed to input the feedback.");
+
+    if (!AskConfirmation("Press [green]y[/] to continue or if you hit the jackpot :party_popper: press [red]n[/] to skip to the summary."))
     {
         break;
     }
@@ -50,50 +72,10 @@ foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th" })
 
     history.Add((guess!, wordleFeedback));
 
-    NewLine();
-    AnsiConsole.MarkupLine($"Now based on the entered feedback for [bold yellow]{guess}[/] and all previous feedbacks, I am going to give you some suggestions.");
-    var suggestedWords = trie.SuggestWords(history).ToArray();
+    suggestedWords = trie.SuggestWords(history).ToArray();
+    suggestedWordsCount = suggestedWords.Count();
 
-    Divider("[green]Suggestions for the next guess[/]");
-
-    var suggestionsCont = suggestedWords.Length;
-
-    if (suggestionsCont <= 0)
-    {
-        AnsiConsole.MarkupLine("[red]Oops! It looks like something went wrong because no suggestions were found. This typically indicates that the feedback data entered may be incorrect.[/]");
-        Environment.Exit(1);
-    }
-
-    AnsiConsole.MarkupLine($"There are {suggestionsCont} suggestion(s) in total. Now you have the following options:");
-    do
-    {
-        selection = AnsiConsole.Prompt(
-            new SelectionPrompt<string>()
-                .AddChoices(
-                    "1. Select one of the top 10 suggestions.",
-                    "2. Select the top 1 suggestion.",
-                    "3. Random pick one of the suggestions."));
-
-        option = int.Parse(selection[0].ToString());
-        if (option is 1)
-        {
-            guess = AnsiConsole.Prompt(new SelectionPrompt<string>()
-                .Title("Select one of the following suggested words:")
-                .AddChoices(suggestedWords.Take(10)));
-        }
-        else if (option is 2)
-        {
-            guess = suggestedWords.First();
-        }
-        else
-        {
-            guess = suggestedWords.PickOne();
-        }
-
-        NewLine();
-        AnsiConsole.MarkupLine($"{new[] { "Perfect", "Awesome", "Great" }.PickOne()}! Your {position} guess is: [{RandomColor()}]{guess}[/]");
-    }
-    while (!AskConfirmation("If you're happy with the word, press [green]y[/] to continue or [red]n[/] to select another option."));
+    counter++;
 }
 
 Divider("Summary");
@@ -102,6 +84,8 @@ foreach (var (word, feedback) in history)
 {
     AnsiConsole.MarkupLine(string.Join("", word.Select((letter, i) => $"[invert {feedback[i].ToString().ToLower()}]{letter}[/]")));
 }
+
+AnsiConsole.MarkupLine(string.Join("", guess!.Select(letter => counter < 5 ? $"[invert green]{letter}[/]" : letter.ToString())));
 
 static bool IsValidWord(string? word)
 {
@@ -127,8 +111,6 @@ static bool IsValidWord(string? word)
 }
 
 static void NewLine() => AnsiConsole.WriteLine("");
-
-static string RandomColor() => new[] { "green", "navy", "purple", "teal", "lime", "blue", "fuchsia", "olive" }.PickOne();
 
 static void Divider(string text)
 {
@@ -174,4 +156,17 @@ static WordleStatus[] CollectWordleFeedback()
     while (!AskConfirmation($"Press [green]y[/] to continue or [red]n[/] to re-enter the feedback."));
 
     return wordleFeedback;
+}
+
+static string GetUserInput()
+{
+    string guess;
+    do
+    {
+        AnsiConsole.MarkupLine("Please enter your 1st guess (5 letter word, letters must all be from english alphabet) followed by enter:");
+        guess = Console.ReadLine()?.ToLower();
+    }
+    while (!IsValidWord(guess));
+
+    return guess!;
 }
