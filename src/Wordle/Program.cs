@@ -160,7 +160,7 @@ static WordleStatus[] CollectWordleFeedback()
 
 static string GetUserInput()
 {
-    string guess;
+    string? guess;
     do
     {
         AnsiConsole.MarkupLine("Please enter your 1st guess (5 letter word, letters must all be from english alphabet) followed by enter:");
