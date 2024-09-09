@@ -10,7 +10,7 @@ public static class EnumerableExtensions
         {
             throw new ArgumentException("The enumerable must have at leat one element");
         }
-        
+
         if (enumerable.Count() == 1)
         {
             return enumerable.First();

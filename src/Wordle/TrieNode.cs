@@ -14,5 +14,5 @@ public class TrieNode
 
     public long? Frequency { get; set; }
 
-    public override string ToString() => IsWord ? $"{Value} ({Word} {Frequency?.ToString() ?? ""})" : Value.ToString(); 
+    public override string ToString() => IsWord ? $"{Value} ({Word} {Frequency?.ToString() ?? ""})" : Value.ToString();
 }
