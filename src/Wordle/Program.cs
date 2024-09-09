@@ -42,7 +42,7 @@ foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th", "6th" })
             NewLine();
             AnsiConsole.MarkupLine($"{new[] { "Perfect", "Awesome", "Great" }.PickOne()}! Your {position} guess is: [yellow]{guess}[/]");
         }
-        while (!AskConfirmation("If you're happy with the word, press [green]y[/] to continue or [red]n[/] to select another option."));
+        while (!AskConfirmation("If you're happy with the word, enter it into Wordle and press [green]y[/] to continue or [red]n[/] to select another option."));
     }
     else
     {
@@ -60,9 +60,7 @@ foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th", "6th" })
         break;
     }
 
-    AnsiConsole.MarkupLine($"Great! Now go ahead and enter your {position} guess ([bold yellow]{guess}[/]) into Wordle and once done proceed to input the feedback.");
-
-    if (!AskConfirmation("Press [green]y[/] to continue or if you hit the jackpot :party_popper: press [red]n[/] to skip to the summary."))
+    if (!AskConfirmation("Great! Now go ahead and press [green]y[/] to enter the Wordle feedback or if you hit the jackpot :party_popper: press [red]n[/] to skip to the summary."))
     {
         break;
     }
