@@ -3,7 +3,7 @@ using Wordle.Extensions;
 using Spectre.Console;
 using WordleStatus = Wordle.Status;
 
-var trie = await WordleTrie.FromDictionary("./resources/words_alpha_five_letter_freq.txt");
+var trie = await WordleTrie.FromDictionary("./Resources/words_alpha_five_letter_freq.txt");
 
 var guess = "";
 var history = new List<(string GuessedWord, WordleStatus[] WordleFeedback)>(5);
