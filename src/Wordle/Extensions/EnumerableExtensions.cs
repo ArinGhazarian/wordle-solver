@@ -8,7 +8,7 @@ public static class EnumerableExtensions
     {
         if (!enumerable.Any())
         {
-            throw new ArgumentException("The enumerable must have at leat one element");
+            throw new ArgumentException("The enumerable must have at least one element");
         }
 
         if (enumerable.Count() == 1)
