@@ -23,9 +23,9 @@ foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th", "6th" })
             var selection = AnsiConsole.Prompt(
                 new SelectionPrompt<string>()
                     .AddChoices(
-                        "1. Select one of the top 10 suggestions.",
+                        "1. Select one of the top 100 suggestions.",
                         "2. Select the top 1 suggestion.",
-                        "3. Random pick from top 100 suggestions.",
+                        "3. Random pick from the top 100 suggestions.",
                         "4. Let me enter my own."));
 
             var option = int.Parse(selection[0].ToString());
@@ -33,9 +33,9 @@ foreach (var position in new[] { "1st", "2nd", "3rd", "4th", "5th", "6th" })
             {
                 1 => AnsiConsole.Prompt(new SelectionPrompt<string>()
                                 .Title("Select one of the following suggested words:")
-                                .AddChoices(suggestedWords.Take(10))),
+                                .AddChoices(suggestedWords.Take(100))),
                 2 => suggestedWords.First(),
-                3 => suggestedWords.PickOne(),
+                3 => suggestedWords.Take(100).PickOne(),
                 _ => GetUserInput()
             };
 
