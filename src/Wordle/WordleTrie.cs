@@ -39,6 +39,7 @@ public class WordleTrie
             }
         }
 
+        excludedLetters.ExceptWith(includedLetters); // don't exclude letters that are included somewhere else!
         var paths = new List<(string Word, long? Frequency)>();
         FindAllPaths(Root, -1, includedLetters, excludedLetters, letterHistory, paths);
 

@@ -68,7 +68,24 @@ public class WordleTireTests
         // Assert
         words.Should().HaveCount(6);
         words.Should().ContainInOrder(["stern", "utero", "steri", "uteri", "sterk", "stero"]);
+    }
 
+    [Fact]
+    public async Task SuggestWords_Should_Not_Exclude_Words_That_Are_Both_Gray_And_Not_Gray()
+    {
+        // Arrage
+        var wordleTrie = await BuildWordleTrie();
+
+        // Act
+        var words = wordleTrie.SuggestWords(
+            [
+                ("about", [G, G, G, G, Y]),
+                ("witch", [G, G, N, G, G]),
+                ("enter", [Y, G, N, G, G]) // E is both Yellow and Gray here
+            ]);
+
+        // Assert
+        words.Should().NotBeEmpty();
     }
 
     private async Task<WordleTrie> BuildWordleTrie() => await WordleTrie.FromDictionary("./Resources/words_alpha_five_letter_freq.txt");
